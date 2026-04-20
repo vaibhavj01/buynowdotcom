@@ -5,6 +5,7 @@ import { Route,
  } from "react-router-dom";
 import RootLayout from "./component/layout/RootLayout";
 import Home from "./component/home/Home";
+import Products from "./component/product/Products";
 
 
 function App() {
@@ -12,7 +13,7 @@ function App() {
   createRoutesFromElements(
     <Route path="/" element={<RootLayout/>}>
       <Route index element ={<Home/>}/>
-
+      <Route path="/products" element ={<Products/>}/>
     </Route>
   )
  );

@@ -1,60 +1,70 @@
 import React, { useEffect, useState } from "react";
 import Hero from "../hero/Hero";
 import Paginator from "../common/Paginator";
-import ProductImage from "../utils/ProductImage";
-import { getDistinctProductsByName } from "../services/ProductService";
-import { toast, ToastContainer } from "react-toastify";
 import { Card } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { useSelector } from "react-redux";
+import ProductImage from "../utils/ProductImage";
+import { useDispatch, useSelector } from "react-redux";
+import { toast, ToastContainer } from "react-toastify";
+import { getDistinctProductsByName } from "../services/ProductService";
+import { setTotalItems } from "../../store/features/paginationSlice";
 
-const Home = () => { 
-    const [products, setProducts] = useState([]);
-    const [filteredProducts, setFilteredProducts] = useState([]);
+const Home = () => {
+const dispatch = useDispatch();
 
-    const {searchQuery, selectedCategory} = useSelector((state)=>state.search);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const { searchQuery, selectedCategory } = useSelector(
+    (state) => state.search
+  );
+    const { itemsPerPage, currentPage } = useSelector((state) => state.pagination);
 
-    const [errorMessage, setErrorMessage] = useState(null);
-    const [currentPage, setCurrentPage] = useState([]);
-    const itemsperPage = 10;
+  const [errorMessage, setErrorMessage] = useState(null);
+  
 
-    useEffect(() => {
-        const getProducts = async () => {
-            try {
-                const response = await getDistinctProductsByName();
-                setProducts(response.data);
-            } catch (error) {
-                setErrorMessage(error.message);
-                toast.error(error.message);
-            }
-        };
-        getProducts();
-    }, []);
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        const response = await getDistinctProductsByName();
+        setProducts(response.data);
+      } catch (error) {
+        setErrorMessage(error.message);
+        toast.error(errorMessage);
+      }
+    };
+    getProducts();
+  }, []);
 
-    useEffect(()=>{
-        const results = products.filter((product)=>{
-            const matchesQuery = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesCategory = selectedCategory === "all" ||
-            product.category.name.toLowerCase().includes(selectedCategory.toLowerCase())
+  useEffect(() => {
+    const results = products.filter((product) => {
+      const matchesQuery = product.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "all" ||
+        product.category.name
+          .toLowerCase()
+          .includes(selectedCategory.toLowerCase());
 
-            return matchesQuery && matchesCategory;
-        })
-        setFilteredProducts(results);
-    },[searchQuery,selectedCategory, products])
+      return matchesQuery && matchesCategory;
+    });
+    setFilteredProducts(results);
+  }, [searchQuery, selectedCategory, products]);
 
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+   useEffect(()=>{
+          dispatch(setTotalItems(filteredProducts.length));
+      },[filteredProducts, dispatch]);
 
-    const indexOflastProduct = currentPage * itemsperPage;
-    const indexOfFirstProduct = indexOflastProduct - itemsperPage;
+  const indexOfLastProduct = currentPage * itemsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
+  const currentProducts = filteredProducts.slice(
+    indexOfFirstProduct,
+    indexOfLastProduct
+  );
 
-    const currentProducts = filteredProducts.slice(
-        indexOfFirstProduct,
-        indexOflastProduct
-    );
-
-    return (
-        <>
-            <Hero />
+  return (
+    <>
+      <Hero />
       <div className='d-flex flex-wrap justify-content-center p-5'>
         <ToastContainer />
         {currentProducts &&
@@ -84,15 +94,10 @@ const Home = () => {
             </Card>
           ))}
       </div>
-                <Paginator
-                    itemsPerPage={itemsperPage}
-                    totalItems={products.length}
-                    currentPage={currentPage}
-                    paginate={paginate}
-                />
-            
-        </>
-    );
+
+      <Paginator/>
+    </>
+  );
 };
 
 export default Home;

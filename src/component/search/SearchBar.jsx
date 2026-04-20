@@ -1,15 +1,25 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllCategories } from "../../store/features/categorySlice";
+import { setSearchQuery, setSelectedCategory, clearFilters } from "../../store/features/searchSlice";
 
 
+const SearchBar = () => {
+    const dispatch = useDispatch();
+    const categories = useSelector((state) => state.category.categories);
+    const { searchQuery, selectedCategory } = useSelector((state) => state.search);
 
-const SearchBar = ({ value, onChange, onCategoryChange }) => {
-    const dispatch = useDispatch()
-    const categories = useSelector((state) => state.category.categories)
 
-    const handleCategoryChange = (e)=>{
-        onCategoryChange(e.target.value);
+    const handleCategoryChange = (e) => {
+        dispatch(setSelectedCategory(e.target.value));
+    };
+
+    const handleClearFilters = () => {
+        dispatch(clearFilters());
+    };
+
+    const handleSearchQueryChange = (e) => {
+        dispatch(setSearchQuery(e.target.value));
     };
 
     useEffect(() => {
@@ -18,9 +28,11 @@ const SearchBar = ({ value, onChange, onCategoryChange }) => {
 
     return (
         <div className='search-bar input-group input-group-sm'>
-            <select onChange={handleCategoryChange} className="form-control-sm">
+            <select
+                value={selectedCategory}
+                onChange={handleCategoryChange} className="form-control-sm">
                 <option value="all">All Category</option>
-                {categories.map((category) =>(
+                {categories.map((category) => (
                     <option key={category.id} value={category.name}>
                         {category.name}
                     </option>
@@ -28,12 +40,14 @@ const SearchBar = ({ value, onChange, onCategoryChange }) => {
             </select>
             <input
                 type='text'
-                value={value}
-                onChange={onChange}
+                value={searchQuery}
+                onChange={handleSearchQueryChange}
                 className='form-control'
                 placeholder='search product(e.g. watch...)'
             />
-            <button className="search-button">Clear Filter</button>
+            <button className="search-button" onClick={handleClearFilters}>
+                Clear Filter
+            </button>
         </div>
     );
 }
