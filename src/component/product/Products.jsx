@@ -4,16 +4,16 @@ import SearchBar from "../search/SearchBar";
 import { getAllProducts } from "../../store/features/productSlice";
 import { useDispatch, useSelector } from "react-redux";
 import Paginator from "../common/Paginator";
-import { setTotalItems} from "../../store/features/paginationSlice";
+import { setTotalItems } from "../../store/features/paginationSlice";
 import SideBar from "../common/SideBar";
 
 const Products = () => {
     const [filteredProducts, setFilteredProducts] = useState([]);
     const { searchQuery, selectedCategory } = useSelector((state) => state.search);
     const { itemsPerPage, currentPage } = useSelector((state) => state.pagination);
-    
+
     const dispatch = useDispatch()
-    const products = useSelector((state) => state.product.products)
+    const { products, selectedBrands } = useSelector((state) => state.product)
 
     useEffect(() => {
         dispatch(getAllProducts())
@@ -29,18 +29,23 @@ const Products = () => {
                 product.category.name
                     .toLowerCase()
                     .includes(selectedCategory.toLowerCase());
+            const matchesBrand =
+                selectedBrands.length === 0 ||
+                selectedBrands.some((selectedBrand) =>
+                    product.brand.toLowerCase().includes(selectedBrand.toLowerCase())
+                );
 
-            return matchesQuery && matchesCategory;
+            return matchesQuery && matchesCategory && matchesBrand;
         });
         setFilteredProducts(results);
-    }, [searchQuery, selectedCategory, products]);
+    }, [searchQuery, selectedCategory, selectedBrands, products]);
 
 
-    useEffect(()=>{
+    useEffect(() => {
         dispatch(setTotalItems(filteredProducts.length));
-    },[filteredProducts, dispatch]);
+    }, [filteredProducts, dispatch]);
 
-    
+
     const indexOfLastProduct = currentPage * itemsPerPage;
     const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
     const currentProducts = filteredProducts.slice(
@@ -61,13 +66,13 @@ const Products = () => {
             </div>
             <div className="d-flex">
                 <aside className="sidebar" style={{ width: "250px", padding: "1rem" }}>
-                    <SideBar/>
+                    <SideBar />
                 </aside>
                 <section style={{ flex: 1 }}>
                     <ProductCart products={currentProducts} />
 
                     <div className="pagination">
-                        <Paginator/>
+                        <Paginator />
                     </div>
                 </section>
 
