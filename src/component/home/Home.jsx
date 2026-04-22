@@ -4,36 +4,27 @@ import Paginator from "../common/Paginator";
 import { Card } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import ProductImage from "../utils/ProductImage";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { toast, ToastContainer } from "react-toastify";
-import { getDistinctProductsByName } from "../services/ProductService";
 import { setTotalItems } from "../../store/features/paginationSlice";
+import { getDistinctProductsByName } from "../../store/features/productSlice";
+import LoadSpinner from "../common/LoadSpinner";
 
 const Home = () => {
-const dispatch = useDispatch();
-
-  const [products, setProducts] = useState([]);
+  const dispatch = useDispatch();
   const [filteredProducts, setFilteredProducts] = useState([]);
+  const products = useSelector((state) => state.product.distinctProducts);
   const { searchQuery, selectedCategory } = useSelector(
     (state) => state.search
   );
-    const { itemsPerPage, currentPage } = useSelector((state) => state.pagination);
-
-  const [errorMessage, setErrorMessage] = useState(null);
-  
+  const { itemsPerPage, currentPage } = useSelector(
+    (state) => state.pagination
+  );
+  const isLoading = useSelector((state) => state.product.isLoading);
 
   useEffect(() => {
-    const getProducts = async () => {
-      try {
-        const response = await getDistinctProductsByName();
-        setProducts(response.data);
-      } catch (error) {
-        setErrorMessage(error.message);
-        toast.error(errorMessage);
-      }
-    };
-    getProducts();
-  }, []);
+    dispatch(getDistinctProductsByName());
+  }, [dispatch]);
 
   useEffect(() => {
     const results = products.filter((product) => {
@@ -51,9 +42,9 @@ const dispatch = useDispatch();
     setFilteredProducts(results);
   }, [searchQuery, selectedCategory, products]);
 
-   useEffect(()=>{
-          dispatch(setTotalItems(filteredProducts.length));
-      },[filteredProducts, dispatch]);
+  useEffect(() => {
+    dispatch(setTotalItems(filteredProducts.length));
+  }, [filteredProducts, dispatch]);
 
   const indexOfLastProduct = currentPage * itemsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
@@ -61,6 +52,14 @@ const dispatch = useDispatch();
     indexOfFirstProduct,
     indexOfLastProduct
   );
+
+  if (isLoading) {
+    return (
+      <div>
+        <LoadSpinner />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -70,7 +69,7 @@ const dispatch = useDispatch();
         {currentProducts &&
           currentProducts.map((product) => (
             <Card key={product.id} className='home-product-card'>
-              <Link to={"#"} className='link'>
+              <Link to={`/products/${product.name}`} className='link'>
                 <div className='image-container'>
                   {product.images.length > 0 && (
                     <ProductImage productId={product.images[0].id} />
@@ -85,7 +84,7 @@ const dispatch = useDispatch();
                 <h4 className='price'>{product.price}</h4>
                 <p className='text-success'>{product.inventory} in stock.</p>
                 <Link
-                  to={`products/${product.name}`}
+                  to={`/products/${product.name}`}
                   className='shop-now-button'>
                   {" "}
                   Shop now
@@ -95,7 +94,7 @@ const dispatch = useDispatch();
           ))}
       </div>
 
-      <Paginator/>
+      <Paginator />
     </>
   );
 };

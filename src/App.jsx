@@ -14,6 +14,7 @@ function App() {
     <Route path="/" element={<RootLayout/>}>
       <Route index element ={<Home/>}/>
       <Route path="/products" element ={<Products/>}/>
+       <Route path="/products/:name" element ={<Products/>}/>
     </Route>
   )
  );
